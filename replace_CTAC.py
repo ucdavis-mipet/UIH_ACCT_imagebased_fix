@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 
 # defined functions
 from open_file_gui import import_filepath_gui
+from open_file_gui import import_filename_gui
 from process_CTAC import process_ACCT_fix
 
 tic = time.time()
@@ -23,41 +24,41 @@ current_dir = os.getcwd() #current folder
 
 print ''        
 print 'Locate image directory and select AACT image folder \n' 
-filename_and_path_aact = import_filepath_gui() #open gui to select directory and files to edit
-file_path_acct = os.path.dirname(filename_and_path_aact)
-file_name_acct = os.path.basename(filename_and_path_aact)
+rawdata_filename_and_path_aact = import_filepath_gui() #open gui to select directory and files to edit
+rawdata_file_path_acct = os.path.dirname(rawdata_filename_and_path_aact)
+rawdata_file_name_acct = os.path.basename(rawdata_filename_and_path_aact)
 
 print ''        
 print 'Locate image directory and select PET image folder \n' 
-filename_and_path_pet = import_filepath_gui() #open gui to select directory and files to edit
-file_path_pet = os.path.dirname(filename_and_path_pet)
-file_name_pet = os.path.basename(filename_and_path_pet)
+rawdata_filename_and_path_pet = import_filepath_gui() #open gui to select directory and files to edit
+rawdata_file_path_pet = os.path.dirname(rawdata_filename_and_path_pet)
+rawdata_file_name_pet = os.path.basename(rawdata_filename_and_path_pet)
 
 """
     COPY ACCT IMAGES TO MODIFY
 """
 
 # define copy directory with extension '_fix'
-copy_dir = file_path_acct+'/'+file_name_acct+'_fix'
+copy_dir = rawdata_file_path_acct+'/'+rawdata_file_name_acct+'_fix'
 
 if os.path.exists(copy_dir) == False:
     print ''       
     print 'Copying ACCT image folder -> ACCT_fix ' 
     
     os.mkdir(copy_dir)
-    os.chdir(filename_and_path_aact) #chg directory 
+    os.chdir(rawdata_filename_and_path_aact) #chg directory 
     num_ims = len([name for name in os.listdir('.') if os.path.isfile(name)])
     for i in range (1,10):    
         image_name = '0000000' + str(i) + '.dcm'
-        shutil.copyfile(filename_and_path_aact+'/'+image_name, copy_dir+'/'+image_name) #copy ACCT images to _fix folder     
+        shutil.copyfile(rawdata_filename_and_path_aact+'/'+image_name, copy_dir+'/'+image_name) #copy ACCT images to _fix folder     
         
     for i in range (10,100):    
         image_name = '000000' + str(i) + '.dcm'
-        shutil.copyfile(filename_and_path_aact+'/'+image_name, copy_dir+'/'+image_name) #copy ACCT images to _fix folder   
+        shutil.copyfile(rawdata_filename_and_path_aact+'/'+image_name, copy_dir+'/'+image_name) #copy ACCT images to _fix folder   
         
     for i in range (100,num_ims+1):    
         image_name = '00000' + str(i) + '.dcm'
-        shutil.copyfile(filename_and_path_aact+'/'+image_name, copy_dir+'/'+image_name) #copy ACCT images to _fix folder   
+        shutil.copyfile(rawdata_filename_and_path_aact+'/'+image_name, copy_dir+'/'+image_name) #copy ACCT images to _fix folder   
     print 'Done copying ACCT to fix'
 else: 
     print 'Warning: ACCT has been edited previously! \n'
@@ -66,7 +67,7 @@ else:
 """
     RUN PROCESS ACCT_fix
 """
-CTAC_image_volume_update = process_ACCT_fix(copy_dir, filename_and_path_pet)
+CTAC_image_volume_update = process_ACCT_fix(copy_dir, rawdata_filename_and_path_pet)
 
 
 """
@@ -113,13 +114,35 @@ for i in range (100,num_ims+1):
 print 'DONE: writing new dcm files'
 
 
+"""
+    ---- REPLACE NC FILES ------------------------------------------------
+"""
+print ''        
+print 'Select raw data folder and click the  *.1.nc file \n' 
+rawdata_filename_and_path = import_filename_gui() #open gui to select directory and files to edit
+rawdata_file_path = os.path.dirname(rawdata_filename_and_path)
+rawdata_file_name = os.path.basename(rawdata_filename_and_path)
 
+"""
+    COPY OLD FILES TO REPOSITORY
+"""
 
+# define copy directory 
+copy_dir = current_dir+'/repository_edits'
 
-file_name_dcm = file_name.replace('nc', 'dcm')
-filename_and_path_dcm = filename_and_path.replace('nc', 'dcm')
-shutil.copy(filename_and_path_dcm, current_dir+'/repository_edits/'+file_name_dcm)  #copy dcm file
+if os.path.exists(copy_dir) == False:
+    os.mkdir(copy_dir) #copy folder          
+else: 
+    print 'Warning: raw data has been edited previously!! \n'
 
+print ''        
+print 'Copy from:  '+rawdata_file_path
+print 'Copy to:  '+copy_dir+'\n'
+
+shutil.copy(rawdata_filename_and_path, current_dir+'/repository_edits/'+rawdata_file_name) #copy nc file
+rawdata_file_name_dcm = rawdata_file_name.replace('nc', 'dcm')
+rawdata_filename_and_path_dcm = rawdata_filename_and_path.replace('nc', 'dcm')
+shutil.copy(rawdata_filename_and_path_dcm, current_dir+'/repository_edits/'+rawdata_file_name_dcm)  #copy dcm file
 
 
 """
@@ -129,34 +152,34 @@ shutil.copy(filename_and_path_dcm, current_dir+'/repository_edits/'+file_name_dc
 print 'Select new nc file to replace current nc file \n' 
 
 os.chdir(current_dir+'/nc_files') # change path to nc directory
-filename_and_path_newnc = import_filename_gui() #open gui to select directory and files to edit
-nc_file_name = os.path.basename(filename_and_path_newnc)
+rawdata_filename_and_path_newnc = import_filename_gui() #open gui to select directory and files to edit
+nc_rawdata_file_name = os.path.basename(rawdata_filename_and_path_newnc)
 
-file_name_nc = os.path.basename(filename_and_path_newnc)
-print 'Changing nc to: '+file_name_nc
+rawdata_file_name_nc = os.path.basename(rawdata_filename_and_path_newnc)
+print 'Changing nc to: '+rawdata_file_name_nc
 
 for i in range (1,9): #change nodes 1 - 8
-    filename_and_path_i = filename_and_path.replace('.1.nc','.'+str(i)+'.nc')        
-    #print filename_and_path_i
-    shutil.copy(filename_and_path_newnc, filename_and_path_i)
+    rawdata_filename_and_path_i = rawdata_filename_and_path.replace('.1.nc','.'+str(i)+'.nc')        
+    #print rawdata_filename_and_path_i
+    shutil.copy(rawdata_filename_and_path_newnc, rawdata_filename_and_path_i)
     
 print 'All .nc files replaced \n'
 """
     REPLACE DCM FILES
 """ 
 # check which nc file was selected and corresponding QF
-if nc_file_name == 'v5.nc':  
+if nc_rawdata_file_name == 'v5.nc':  
     dose_cal_factor = 221127.015625
     print 'New dose cal factor = '+str(dose_cal_factor)
 else: 
     print 'No QF selected!!' 
 
-dcm_to_edit = pydicom.dcmread(filename_and_path_dcm) # get dcm data
+dcm_to_edit = pydicom.dcmread(rawdata_filename_and_path_dcm) # get dcm data
 test = dcm_to_edit[0x00067, 0x002C] # QF tag specified by recon team 
 test.value = dose_cal_factor # change value 
 
 for i in range (1,9): 
-    dcm_to_edit.save_as(filename_and_path_dcm.replace('.1.dcm','.'+str(i)+'.dcm') )
+    dcm_to_edit.save_as(rawdata_filename_and_path_dcm.replace('.1.dcm','.'+str(i)+'.dcm') )
 
 print 'All .dcm files replaced \n'
 
