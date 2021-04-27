@@ -10,11 +10,11 @@ import pydicom
 import numpy as np
 import os
 
-def process_ACCT_fix(ACCT_im_dir, PET_im_dir):
+def process_ACCT_fix(ACCT_im_dir):
     
     os.chdir(ACCT_im_dir) #chg directory 
     num_slices = len([name for name in os.listdir('.') if os.path.isfile(name)]) #get number of slices in directory
-    print 'number of ACCT images in folder: '+str(num_slices)
+    print ('Loading '+str(num_slices)+' ACCT slices to numpy')
     
     #get image matrix size
     test = pydicom.dcmread('00000001.dcm')
@@ -28,7 +28,7 @@ def process_ACCT_fix(ACCT_im_dir, PET_im_dir):
     image_volume = np.zeros([matrix_size,matrix_size,num_slices]) #allocate np array for image  
     image_mask = np.ones([matrix_size,matrix_size,num_slices]) #allocate np array for mask  
     image_volume_update = np.zeros([matrix_size,matrix_size,num_slices]) #allocate np array for image
-    print 'START: loading ACCT pixel data'
+    #print ('START: loading ACCT pixel data')
     for i in range (1,10):
     
         image_name = '0000000' + str(i) + '.dcm'
@@ -58,12 +58,12 @@ def process_ACCT_fix(ACCT_im_dir, PET_im_dir):
         image_volume[:,:,i-1] = slice_array_scaled
   
 
-    print 'DONE: loading ACCT pixel data'
+    print ('Applying HU changes')
     """
     APPLY CT-IMAGE HU CHANGES
     """
     restricted_FOV_size = 500 #beyond this fov (in mm) to mask and threshold
-    
+    HU_thresh = -700
     for z in range(0,num_slices):
 
         for y in range(0,matrix_size):
@@ -73,11 +73,11 @@ def process_ACCT_fix(ACCT_im_dir, PET_im_dir):
                  x_ = x*x_dim-matrix_size*x_dim/2
                  y_ = y*y_dim-matrix_size*y_dim/2
             
-                 if(x_*x_ + y_*y_ >= np.power(restricted_FOV_size/2,2) and image_volume[x,y,z] <= -800):
+                 if(x_*x_ + y_*y_ >= np.power(restricted_FOV_size/2,2) and image_volume[x,y,z] <= HU_thresh):
                      image_mask[x,y,z] = 0
                      #print 'x'
                      
     image_volume_update = (image_volume+1000)*image_mask - 1000   
-    print 'image volume update calc completed'
+    print ('Return fixed image volume \n')
               
     return image_volume_update
